@@ -15,4 +15,6 @@
     \-- data
     \-- logfiles
     \-- modelfiles
+    |-- README.md
+    |-- .gitignore
 ```
