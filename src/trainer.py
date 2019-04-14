@@ -10,10 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
-from utiles import getTime
-
 def summary(model, input_size, batch_size=-1, device="cuda"):
-
 
     def register_hook(module):
 
@@ -41,15 +38,12 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
                 params += torch.prod(torch.LongTensor(list(module.bias.size())))
             summary[m_key]["nb_params"] = params
 
-
         if (
             not isinstance(module, nn.Sequential)
             and not isinstance(module, nn.ModuleList)
             and not (module == model)
         ):
             hooks.append(module.register_forward_hook(hook))
-
-
 
     device = device.lower()
     assert device in [
@@ -78,6 +72,7 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     model.apply(register_hook)
 
     # make a forward pass
+    # print(x.shape)
     model(*x)
 
     # remove these hooks
@@ -121,7 +116,7 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     print("Params size (MB): %0.2f" % total_params_size)
     print("Estimated Total Size (GB): %0.2f" % total_size)
     print("----------------------------------------------------------------")
-
+# return summary
 
 class Trainer(object):
     """ Train Templet
@@ -201,7 +196,7 @@ class Trainer(object):
             self.cur_epoch += 1
             self.lr_scheduler.step(self.cur_epoch)
             cur_lr = self.lr_scheduler.get_lr()[-1]
-            self.writer.add_scalar('lr', cur_lr, self.cur_epoch)
+            self.writer.add_scalar('{}/lr'.format(self.net._get_name()), cur_lr, self.cur_epoch)
 
             loss_train = self.train_epoch()
             print("----------------------------------------------------------------------------------------------")
@@ -211,7 +206,7 @@ class Trainer(object):
             self.writer.add_scalars('loss', {'train': loss_train, 'valid': loss_valid}, self.cur_epoch)
 
             print_log = "{} || Elapsed: {:.4f}h || Epoch: [{:3d}]/[{:3d}] || lr: {:.6f},| train loss: {:4.4f}, valid loss: {:4.4f}".\
-                    format(self.getTime(), self.elapsed_time/3600, self.cur_epoch, self.configer.n_epoch, 
+                    format(self._get_time(), self.elapsed_time/3600, self.cur_epoch, self.configer.n_epoch, 
                         cur_lr, loss_train, loss_valid)
             
             if loss_valid < self.valid_loss:
@@ -243,7 +238,7 @@ class Trainer(object):
             self.optimizer.step()
 
             avg_loss += [loss_i.detach().cpu().numpy()]
-            self.writer.add_scalar('loss_train', loss_i, self.cur_epoch*n_batch + i_batch)
+            self.writer.add_scalar('{}/loss_train'.format(self.net._get_name()), loss_i, self.cur_epoch*n_batch + i_batch)
 
             duration_time = time.time() - start_time
             start_time = time.time()
@@ -252,7 +247,7 @@ class Trainer(object):
             left_time = total_time - self.elapsed_time
 
             print_log = "{} || Elapsed: {:.4f}h | Left: {:.4f}h | FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] | cur: [{:3d}] || lr: {:.6f}, loss: {:4.4f}".\
-                format(self.getTime(), self.elapsed_time/3600, left_time/3600, self.configer.batchsize / duration_time,
+                format(self._get_time(), self.elapsed_time/3600, left_time/3600, self.configer.batchsize / duration_time,
                     self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, self.cur_batch,
                     self.lr_scheduler.get_lr()[-1], loss_i
                 )
@@ -278,13 +273,13 @@ class Trainer(object):
             loss_i = self.criterion(y_pred, y)
 
             avg_loss += [loss_i.detach().cpu().numpy()]
-            self.writer.add_scalar('loss_valid', loss_i, self.cur_epoch*n_batch + i_batch)
+            self.writer.add_scalar('{}/loss_valid'.format(self.net._get_name()), loss_i, self.cur_epoch*n_batch + i_batch)
 
             duration_time = time.time() - start_time
             start_time = time.time()
 
             print_log = "{} || FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] || loss: {:4.4f}".\
-                format(self.getTime(), self.configer.batchsize / duration_time,
+                format(self._get_time(), self.configer.batchsize / duration_time,
                     self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, loss_i
                 )
             print(print_log)
@@ -296,7 +291,7 @@ class Trainer(object):
     def save_checkpoint(self):
         
         checkpoint_state = {
-            'save_time': self.getTime(),
+            'save_time': self._get_time(),
 
             'cur_epoch': self.cur_epoch,
             'cur_batch': self.cur_batch,
@@ -331,3 +326,7 @@ class Trainer(object):
         print("load checkpoint from {}, last save time: {}".\
                                 format(checkpoint_path, checkpoint_state['save_time']))
 
+
+    def _get_time(self):
+        
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
