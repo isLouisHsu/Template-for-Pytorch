@@ -1,4 +1,4 @@
-# Deep-Learning-Template
+# PyTorch Template for Deep Learning
 ```
 \-- project
     \-- prepare_data
@@ -8,13 +8,11 @@
         |-- config.py
         |-- datasets.py
         |-- models.py
-        |-- losses.py
+        |-- metrics.py
         |-- train.py
-        |-- test.py
         |-- main.py
     \-- data
-    \-- logfiles
-    \-- modelfiles
+    \-- checkpoints
     |-- README.md
     |-- .gitignore
 ```
