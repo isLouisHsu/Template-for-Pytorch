@@ -4,6 +4,7 @@ configer = EasyDict()
 
 configer.ckptdir = './ckpt'
 
+configer.inputsize = (3, 12, 12)
 configer.batchsize = 2**14
 configer.n_epoch = 60
 
