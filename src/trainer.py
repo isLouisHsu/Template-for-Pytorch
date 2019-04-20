@@ -10,6 +10,7 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
+from processbar import ProcessBar
 from utiles import getTime
 
 def summary(model, input_size, batch_size=-1, device="cuda"):
@@ -109,14 +110,14 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     total_size = (total_params_size + total_output_size + total_input_size) / 1024
 
     print("================================================================")
-    print("Total params: {0:,}".format(total_params))
-    print("Trainable params: {0:,}".format(trainable_params))
-    print("Non-trainable params: {0:,}".format(total_params - trainable_params))
+    print("Total params:                    {0:,}".format(total_params))
+    print("Trainable params:                {0:,}".format(trainable_params))
+    print("Non-trainable params:            {0:,}".format(total_params - trainable_params))
     print("----------------------------------------------------------------")
-    print("Input size (MB): %0.2f" % total_input_size)
+    print("Input size (MB):                 %0.2f" % total_input_size)
     print("Forward/backward pass size (MB): %0.2f" % total_output_size)
-    print("Params size (MB): %0.2f" % total_params_size)
-    print("Estimated Total Size (GB): %0.2f" % total_size)
+    print("Params size (MB):                %0.2f" % total_params_size)
+    print("Estimated Total Size (GB):       %0.2f" % total_size)
     print("----------------------------------------------------------------")
 # return summary
 
@@ -163,60 +164,53 @@ class Trainer(object):
         ## print information
         summary(self.net, configer.inputsize, configer.batchsize, device="cuda" if cuda.is_available() else "cpu")
 
-        print_log = """
-                    model:              {},
-                    logdir:             {},
-                    ckptdir:            {},
-                    train samples:      {} k,
-                    valid samples:      {} k,
-                    batch size:         {},
-                    batch per epoch:    {},
-                    epoch:              {},
-                    current epoch:      {},
-                    base learing rate:  {},
-                    """.\
-                    format(
-                        self.net._get_name(), 
-                        self.logdir, self.ckptdir,
-                        len(trainset)/1000, len(validset)/1000,
-                        configer.batchsize, len(trainset)/configer.batchsize,
-                        configer.n_epoch, self.cur_epoch, configer.lrbase
-                    )
-        print(print_log)
-
         print("==============================================================================================")
-
+        print("model:           {}".format(self.net._get_name()))
+        print("logdir:          {}".format(self.logdir))
+        print("ckptdir:         {}".format(self.ckptdir))
+        print("train samples:   {}".format(len(trainset)/1000))
+        print("valid samples:   {}".format(len(validset)/1000))
+        print("batch size:      {}".format(configer.batchsize))
+        print("batch per epoch: {}".format(len(trainset)/configer.batchsize))
+        print("epoch:           [{:4d}]/[{:4d}]".format(self.cur_epoch, configer.n_epoch))
+        print("learing rate:    {}".format(configer.lrbase))
+        print("==============================================================================================")
 
     def train(self):
         
         n_epoch = self.configer.n_epoch - self.cur_epoch
         print("Start training! current epoch: {}, remain epoch: {}".format(self.cur_epoch, n_epoch))
 
-        for i_epoch in range(n_epoch):
+        bar = ProcessBar(n_epoch)
 
-            cuda.empty_cache()
+        for i_epoch in range(n_epoch):
+            
+            if self.configer.cuda and cuda.is_available(): cuda.empty_cache()
 
             self.cur_epoch += 1
+            bar.step(self.cur_epoch)
+
             self.lr_scheduler.step(self.cur_epoch)
             cur_lr = self.lr_scheduler.get_lr()[-1]
             self.writer.add_scalar('{}/lr'.format(self.net._get_name()), cur_lr, self.cur_epoch)
 
             loss_train = self.train_epoch()
-            print("----------------------------------------------------------------------------------------------")
+            # print("----------------------------------------------------------------------------------------------")
             loss_valid = self.valid_epoch()
-            print("----------------------------------------------------------------------------------------------")
+            # print("----------------------------------------------------------------------------------------------")
 
             self.writer.add_scalars('loss', {'train': loss_train, 'valid': loss_valid}, self.cur_epoch)
 
-            print_log = "{} || Elapsed: {:.4f}h || Epoch: [{:3d}]/[{:3d}] || lr: {:.6f},| train loss: {:4.4f}, valid loss: {:4.4f}".\
-                    format(self.getTime(), self.elapsed_time/3600, self.cur_epoch, self.configer.n_epoch, 
-                        cur_lr, loss_train, loss_valid)
-            
+            # print_log = "{} || Elapsed: {:.4f}h || Epoch: [{:3d}]/[{:3d}] || lr: {:.6f},| train loss: {:4.4f}, valid loss: {:4.4f}".\
+            #         format(self.getTime(), self.elapsed_time/3600, self.cur_epoch, self.configer.n_epoch, 
+            #             cur_lr, loss_train, loss_valid)
+            # print(print_log)
+
             if loss_valid < self.valid_loss:
                 self.valid_loss = loss_valid
                 self.save_checkpoint()
                 
-            print("==============================================================================================")
+            # print("==============================================================================================")
 
 
     def train_epoch(self):
@@ -249,12 +243,12 @@ class Trainer(object):
             total_time = duration_time * self.configer.n_epoch * len(self.trainset) // self.configer.batchsize
             left_time = total_time - self.elapsed_time
 
-            print_log = "{} || Elapsed: {:.4f}h | Left: {:.4f}h | FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] | cur: [{:3d}] || lr: {:.6f}, loss: {:4.4f}".\
-                format(self.getTime(), self.elapsed_time/3600, left_time/3600, self.configer.batchsize / duration_time,
-                    self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, self.cur_batch,
-                    self.lr_scheduler.get_lr()[-1], loss_i
-                )
-            print(print_log)
+            # print_log = "{} || Elapsed: {:.4f}h | Left: {:.4f}h | FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] | cur: [{:3d}] || lr: {:.6f}, loss: {:4.4f}".\
+            #     format(self.getTime(), self.elapsed_time/3600, left_time/3600, self.configer.batchsize / duration_time,
+            #         self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, self.cur_batch,
+            #         self.lr_scheduler.get_lr()[-1], loss_i
+            #     )
+            # print(print_log)
         
         avg_loss = np.mean(np.array(avg_loss))
         return avg_loss
@@ -281,11 +275,11 @@ class Trainer(object):
             duration_time = time.time() - start_time
             start_time = time.time()
 
-            print_log = "{} || FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] || loss: {:4.4f}".\
-                format(self.getTime(), self.configer.batchsize / duration_time,
-                    self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, loss_i
-                )
-            print(print_log)
+            # print_log = "{} || FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] || loss: {:4.4f}".\
+            #     format(self.getTime(), self.configer.batchsize / duration_time,
+            #         self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, loss_i
+            #     )
+            # print(print_log)
         
         avg_loss = np.mean(np.array(avg_loss))
         return avg_loss
@@ -316,7 +310,7 @@ class Trainer(object):
                             format(self.net._get_name(), self.save_times-self.num_to_keep))
         if os.path.exists(checkpoint_path): os.remove(checkpoint_path)
 
-        print("checkpoint saved at {}".format(checkpoint_path))
+        # print("checkpoint saved at {}".format(checkpoint_path))
 
 
     def load_checkpoint(self, index):
@@ -335,7 +329,6 @@ class Trainer(object):
         self.optimizer.load_state_dict(checkpoint_state['optimizer_state'])
         self.lr_scheduler.load_state_dict(checkpoint_state['lr_scheduler_state'])
 
-        print("load checkpoint from {}, last save time: {}".\
-                                format(checkpoint_path, checkpoint_state['save_time']))
-
+        # print("load checkpoint from {}, last save time: {}".\
+        #                         format(checkpoint_path, checkpoint_state['save_time']))
 
