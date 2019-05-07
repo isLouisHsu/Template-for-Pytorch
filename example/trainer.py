@@ -1,6 +1,7 @@
 import os
 import time
 import numpy as np
+from torchstat import stat
 from collections import OrderedDict
 
 import torch
@@ -164,13 +165,17 @@ class Trainer(object):
             self.load_checkpoint()
 
         ## print information
-        summary(self.net, configer.inputsize, configer.batchsize, device="cuda" if cuda.is_available() else "cpu")
+        if len(configer.inputsize) != 3:
+            summary(self.net, configer.inputsize, configer.batchsize, device="cuda" if cuda.is_available() else "cpu")
+        else:
+            stat(self.net, configer.inputsize)
+            
         print("==============================================================================================")
         print("model:           {}".format(self.net._get_name()))
         print("logdir:          {}".format(self.logdir))
         print("ckptdir:         {}".format(self.ckptdir))
-        print("train samples:   {}".format(len(trainset)/1000))
-        print("valid samples:   {}".format(len(validset)/1000))
+        print("train samples:   {}k".format(len(trainset)/1000))
+        print("valid samples:   {}k".format(len(validset)/1000))
         print("batch size:      {}".format(configer.batchsize))
         print("batch per epoch: {}".format(len(trainset)/configer.batchsize))
         print("epoch:           [{:4d}]/[{:4d}]".format(self.cur_epoch, configer.n_epoch))
