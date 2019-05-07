@@ -5,9 +5,12 @@ from config import configer
 from trainer import Trainer
 from datasets import SineData
 
+import torch
 from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 import torch.nn as nn
+
+from matplotlib import pyplot as plt
 
 class Net(nn.Module):
 
@@ -31,8 +34,24 @@ class Net(nn.Module):
 
 def main():
     net = Net()
-    trainer = Trainer(configer, net, SineData(), SineData(), nn.MSELoss(), SGD, MultiStepLR, num_to_keep=5, resume=False)
+    trainset = SineData()
+    validset = SineData()
+
+    x = validset.samples[:, 0]
+    y_pred_init = net(torch.tensor(x.reshape((-1, 1))).float()).detach().numpy().reshape(-1)
+
+    trainer = Trainer(configer, net, trainset, validset, nn.MSELoss(), SGD, MultiStepLR, num_to_keep=5, resume=False)
     trainer.train()
+
+    y_true = validset.samples[:, 1]
+    y_pred_trained = net(torch.tensor(x.reshape((-1, 1))).float()).detach().numpy().reshape(-1)
+
+    plt.figure()
+    plt.plot(x, y_true, c='r')
+    plt.plot(x, y_pred_init, c='g')
+    plt.plot(x, y_pred_trained, c='b')
+    plt.show()
+
 
 if __name__ == "__main__":
     main()

@@ -11,8 +11,8 @@ class SineData(Dataset):
 
     def __init__(self):
 
-        f = lambda x: np.sign(x) + np.random.randn(x.shape[0])
-        x = np.linspace(-50, 50, 1000)
+        f = lambda x: np.sin(x) + np.random.randn(x.shape[0])*0.2
+        x = np.linspace(-5, 5, 1000)
         y = f(x)
         self.samples = np.concatenate([x, y]).reshape((2, -1)).T
 
