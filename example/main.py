@@ -40,7 +40,7 @@ def main():
     x = validset.samples[:, 0]
     y_pred_init = net(torch.tensor(x.reshape((-1, 1))).float()).detach().numpy().reshape(-1)
 
-    trainer = Trainer(configer, net, trainset, validset, nn.MSELoss(), SGD, MultiStepLR, num_to_keep=5, resume=False)
+    trainer = Trainer(configer, net, net.parameters(), trainset, validset, nn.MSELoss(), SGD, MultiStepLR, num_to_keep=5, resume=False)
     trainer.train()
 
     y_true = validset.samples[:, 1]

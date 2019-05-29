@@ -120,13 +120,13 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     print("Params size (MB):                %0.2f" % total_params_size)
     print("Estimated Total Size (GB):       %0.2f" % total_size)
     print("----------------------------------------------------------------")
-# return summary
+
 
 class Trainer(object):
     """ Train Templet
     """
 
-    def __init__(self, configer, net, trainset, validset, criterion, optimizer, lr_scheduler, num_to_keep=5, resume=False):
+    def __init__(self, configer, net, params, trainset, validset, criterion, optimizer, lr_scheduler, num_to_keep=5, resume=False):
 
         self.configer = configer
 
@@ -147,7 +147,7 @@ class Trainer(object):
 
         ## for optimization
         self.criterion = criterion
-        self.optimizer = optimizer(self.net.parameters(), configer.lrbase)
+        self.optimizer = optimizer(params, configer.lrbase)
         self.lr_scheduler = lr_scheduler(self.optimizer, configer.adjstep, configer.gamma)
         self.writer = SummaryWriter(configer.logdir)
         self.writer.add_graph(self.net, (torch.rand([1] + configer.inputsize), ))
@@ -166,7 +166,8 @@ class Trainer(object):
 
         ## print information
         if len(configer.inputsize) != 3:
-            summary(self.net, configer.inputsize, configer.batchsize, device="cuda" if cuda.is_available() else "cpu")
+            summary(self.net, configer.inputsize, configer.batchsize, 
+                        device="cuda" if cuda.is_available() else "cpu")
         else:
             stat(self.net, configer.inputsize)
             
@@ -194,7 +195,7 @@ class Trainer(object):
             if self.configer.cuda and cuda.is_available(): cuda.empty_cache()
 
             self.cur_epoch += 1
-            bar.step(self.cur_epoch)
+            bar.step()
 
             self.lr_scheduler.step(self.cur_epoch)
             cur_lr = self.lr_scheduler.get_lr()[-1]
