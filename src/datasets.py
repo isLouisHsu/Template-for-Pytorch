@@ -21,6 +21,9 @@ class Data(Dataset):
 
         return 
 
+
+
+## from [如何给你PyTorch里的Dataloader打鸡血 - 码农网](https://www.codercto.com/a/79898.html)
 class Prefetcher():
 
     def __init__(self, dataloader):
