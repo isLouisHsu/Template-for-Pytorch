@@ -3,6 +3,7 @@ from easydict import EasyDict
 configer = EasyDict()
 
 configer.ckptdir = './ckpt'
+configer.logdir = './log'
 
 configer.inputsize = (3, 60, 80)    # (C, H, W)
 configer.batchsize = 2**14
