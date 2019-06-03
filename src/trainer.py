@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from processbar import ProcessBar
-from utiles import getTime
+from utils import getTime
 
 def summary(model, input_size, batch_size=-1, device="cuda"):
 
@@ -312,11 +312,12 @@ class Trainer(object):
                             format(self.net._get_name(), self.save_times))
         torch.save(checkpoint_state, checkpoint_path)
         
-        self.save_times += 1
         checkpoint_path = os.path.join(self.ckptdir, "{}_{:04d}.pkl".\
                             format(self.net._get_name(), self.save_times-self.num_to_keep))
         if os.path.exists(checkpoint_path): os.remove(checkpoint_path)
 
+        self.save_times += 1
+        
         # print("checkpoint saved at {}".format(checkpoint_path))
 
 
