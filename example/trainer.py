@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 
 from processbar import ProcessBar
-from utiles import getTime
+from utils import getTime
 
 def summary(model, input_size, batch_size=-1, device="cuda"):
 
@@ -291,7 +291,7 @@ class Trainer(object):
         avg_loss = np.mean(np.array(avg_loss))
         return avg_loss
     
-
+    @classmethod
     def save_checkpoint(self):
         
         checkpoint_state = {
@@ -319,7 +319,7 @@ class Trainer(object):
 
         # print("checkpoint saved at {}".format(checkpoint_path))
 
-
+    @classmethod
     def load_checkpoint(self, index):
         
         checkpoint_path = os.path.join(self.ckptdir, "{}_{:04d}.pkl".\
