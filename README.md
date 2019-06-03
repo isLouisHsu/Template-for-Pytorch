@@ -1,18 +1,21 @@
 # PyTorch Template for Deep Learning
 ```
-\-- project
-    \-- prepare_data
-    \-- src
-        |-- __init__.py
-        |-- utiles.py
-        |-- config.py
-        |-- datasets.py
-        |-- models.py
-        |-- metrics.py
-        |-- train.py
-        |-- main.py
-    \-- data
-    \-- checkpoints
-    |-- README.md
-    |-- .gitignore
+.
+├── ckpt/
+├── log/
+├── data/
+├── prepare_data/
+├── src/
+│   ├── config.py
+│   ├── datasets.py
+│   ├── lr_finder.py
+│   ├── main.py
+│   ├── metrics.py
+│   ├── models.py
+│   ├── processbar.py
+│   ├── README.md
+│   ├── trainer.py
+│   └── utils.py
+├── README.md
+└── .gitignore
 ```
