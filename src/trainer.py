@@ -126,9 +126,11 @@ class Trainer(object):
     """ Train Templet
     """
 
-    def __init__(self, configer, net, params, trainset, validset, criterion, optimizer, lr_scheduler, num_to_keep=5, resume=False):
+    def __init__(self, configer, net, params, trainset, validset, criterion, 
+                    optimizer, lr_scheduler, num_to_keep=5, resume=False, valid_freq=1):
 
         self.configer = configer
+        self.valid_freq = valid_freq
 
         self.net = net
         if configer.cuda and cuda.is_available(): self.net.cuda()
@@ -180,6 +182,7 @@ class Trainer(object):
         print("batch size:      {}".format(configer.batchsize))
         print("batch per epoch: {}".format(len(trainset)/configer.batchsize))
         print("epoch:           [{:4d}]/[{:4d}]".format(self.cur_epoch, configer.n_epoch))
+        print("val frequency:   {}".format(self.valid_freq))
         print("learing rate:    {}".format(configer.lrbase))
         print("==============================================================================================")
 
@@ -189,6 +192,7 @@ class Trainer(object):
         print("Start training! current epoch: {}, remain epoch: {}".format(self.cur_epoch, n_epoch))
 
         bar = ProcessBar(n_epoch)
+        loss_train = 0.; loss_valid = 0.
 
         for i_epoch in range(n_epoch):
             
@@ -203,7 +207,9 @@ class Trainer(object):
 
             loss_train = self.train_epoch()
             # print("----------------------------------------------------------------------------------------------")
-            loss_valid = self.valid_epoch()
+            
+            if self.valid_freq != 0 and self.cur_epoch % self.valid_freq == 0:
+                loss_valid = self.valid_epoch()
             # print("----------------------------------------------------------------------------------------------")
 
             self.writer.add_scalars('loss', {'train': loss_train, 'valid': loss_valid}, self.cur_epoch)
@@ -213,9 +219,13 @@ class Trainer(object):
             #             cur_lr, loss_train, loss_valid)
             # print(print_log)
 
-            if loss_valid < self.valid_loss:
-                self.valid_loss = loss_valid
+            if self.valid_freq == 0:
                 self.save_checkpoint()
+                
+            else:
+                if loss_valid < self.valid_loss:
+                    self.valid_loss = loss_valid
+                    self.save_checkpoint()
                 
             # print("==============================================================================================")
 
