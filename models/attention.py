@@ -338,3 +338,26 @@ def attention92():
     return Attention([1, 2, 3])
 
 
+if __name__ == "__main__":
+    from tensorboardX import SummaryWriter
+
+    dummy_input = torch.randn(2, 64, 240, 180)
+    
+    net = AttentionModule1(64, 64)    
+    with SummaryWriter(comment='AttentionModule1') as writer:
+        writer.add_graph(net, (dummy_input,), True)
+
+    net = AttentionModule2(64, 64)    
+    with SummaryWriter(comment='AttentionModule2') as writer:
+        writer.add_graph(net, (dummy_input,), True)
+
+    net = AttentionModule3(64, 64)    
+    with SummaryWriter(comment='AttentionModule3') as writer:
+        writer.add_graph(net, (dummy_input,), True)
+
+    dummy_input = torch.randn(2, 3, 224, 224)
+
+    net = attention56()   
+    with SummaryWriter(comment='Attention56') as writer:
+        writer.add_graph(net, (dummy_input,), True)
+
