@@ -44,7 +44,7 @@ class Trainer(object):
         self.optimizer = optimizer(params, configer.lrbase)
         self.lr_scheduler = lr_scheduler(self.optimizer, configer.adjstep, configer.gamma)
         self.writer = SummaryWriter(configer.logdir)
-        self.writer.add_graph(self.net, (torch.rand([1] + configer.inputsize), ))
+        # self.writer.add_graph(self.net, (torch.rand([1] + configer.inputsize), ))
         
         ## initialize
         self.valid_loss = float('inf')
@@ -59,7 +59,7 @@ class Trainer(object):
             self.load_checkpoint()
 
         ## print information
-        stat(self.net, configer.inputsize)
+        # stat(self.net, configer.inputsize)
         if configer.cuda and cuda.is_available(): self.net.cuda()
             
         print("==============================================================================================")
