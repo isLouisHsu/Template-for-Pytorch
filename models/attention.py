@@ -361,3 +361,7 @@ if __name__ == "__main__":
     with SummaryWriter(comment='Attention56') as writer:
         writer.add_graph(net, (dummy_input,), True)
 
+    net = attention92()   
+    with SummaryWriter(comment='attention92') as writer:
+        writer.add_graph(net, (dummy_input,), True)
+
