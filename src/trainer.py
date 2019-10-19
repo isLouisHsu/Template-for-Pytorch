@@ -167,25 +167,27 @@ class Trainer(object):
         start_time = time.time()
         n_batch = len(self.validset) // self.configer.batchsize
 
-        for i_batch, (X, y) in enumerate(self.validloader):
-
-            X = Variable(X.float()); y = Variable(y.float())
-            if self.configer.cuda and cuda.is_available(): X = X.cuda(); y = y.cuda()
+        with torch.no_grad():
             
-            y_pred = self.net(X)
-            loss_i = self.criterion(y_pred, y)
+            for i_batch, (X, y) in enumerate(self.validloader):
 
-            avg_loss += [loss_i.detach().cpu().numpy()]
-            self.writer.add_scalar('{}/valid/loss_i'.format(self.net._get_name()), loss_i, self.cur_epoch*n_batch + i_batch)
+                X = Variable(X.float()); y = Variable(y.float())
+                if self.configer.cuda and cuda.is_available(): X = X.cuda(); y = y.cuda()
 
-            duration_time = time.time() - start_time
-            start_time = time.time()
+                y_pred = self.net(X)
+                loss_i = self.criterion(y_pred, y)
 
-            # print_log = "{} || FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] || loss: {:4.4f}".\
-            #     format(getTime(), self.configer.batchsize / duration_time,
-            #         self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, loss_i
-            #     )
-            # print(print_log)
+                avg_loss += [loss_i.detach().cpu().numpy()]
+                self.writer.add_scalar('{}/valid/loss_i'.format(self.net._get_name()), loss_i, self.cur_epoch*n_batch + i_batch)
+
+                duration_time = time.time() - start_time
+                start_time = time.time()
+
+                # print_log = "{} || FPS: {:4.2f} || Epoch: [{:3d}]/[{:3d}] | Batch: [{:3d}]/[{:3d}] || loss: {:4.4f}".\
+                #     format(getTime(), self.configer.batchsize / duration_time,
+                #         self.cur_epoch, self.configer.n_epoch, i_batch, n_batch, loss_i
+                #     )
+                # print(print_log)
         
         avg_loss = np.mean(np.array(avg_loss))
         return avg_loss
