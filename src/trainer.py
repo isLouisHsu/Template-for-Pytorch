@@ -20,7 +20,7 @@ class Trainer(object):
     """
 
     def __init__(self, configer, net, params, trainset, validset, criterion, 
-                    optimizer, lr_scheduler, num_to_keep=5, resume=False, valid_freq=1):
+                    optimizer, lr_scheduler, num_to_keep=5, resume=None, valid_freq=1):
 
         self.configer = configer
         self.valid_freq = valid_freq
@@ -55,8 +55,8 @@ class Trainer(object):
         self.num_to_keep = num_to_keep
 
         ## if resume
-        if resume:
-            self.load_checkpoint()
+        if resume is not None:
+            self.load_checkpoint(resume)
 
         ## print information
         # stat(self.net, configer.inputsize)
@@ -99,6 +99,8 @@ class Trainer(object):
             
             if self.valid_freq != 0 and self.cur_epoch % self.valid_freq == 0:
                 loss_valid = self.valid_epoch()
+            else:
+                loss_valid = self.valid_loss
             # print("----------------------------------------------------------------------------------------------")
 
             self.writer.add_scalars('loss', {'train': loss_train, 'valid': loss_valid}, self.cur_epoch)
