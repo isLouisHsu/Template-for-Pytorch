@@ -26,6 +26,10 @@ class Trainer(object):
         self.valid_freq = valid_freq
 
         self.net = net
+
+        ## print information
+        # stat(self.net, configer.inputsize)
+        if configer.cuda and cuda.is_available(): self.net.cuda()
         
         ## directory for log and checkpoints
         self.logdir = os.path.join(configer.logdir, self.net._get_name())
@@ -57,10 +61,6 @@ class Trainer(object):
         ## if resume
         if resume is not None:
             self.load_checkpoint(resume)
-
-        ## print information
-        # stat(self.net, configer.inputsize)
-        if configer.cuda and cuda.is_available(): self.net.cuda()
             
         print("==============================================================================================")
         print("model:           {}".format(self.net._get_name()))
